@@ -1,0 +1,32 @@
+name: 同步上游仓库
+
+permissions: write-all              
+
+on: 
+  schedule:
+    - cron: '0 19 * * *'            
+  workflow_dispatch:                
+
+jobs:
+  sync-upstream:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: 检查
+        uses: actions/checkout@v4
+
+      - name: 同步上游变化
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+            target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+            target_sync_branch: main
+            upstream_sync_branch: main
+            upstream_sync_repo: doveppp/linuxdo-checkin
+
+            test_mode: false
+
+      - name: 同步检查
+        if: failure()
+        run: |
+          echo "[Error] 由于上游仓库的工作流文件变更，导致GitHub自动暂停了本次自动更新，你需要手动同步分叉一次。"
+          exit 1
